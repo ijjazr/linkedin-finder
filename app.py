@@ -155,10 +155,11 @@ def export_to_sheet(rows, query):
             ])
 
     if new_rows:
-        # Write to exact cell range starting at column A to prevent misalignment
         next_row = len(existing) + 1
-        cell_range = f"A{next_row}"
-        ws.update(cell_range, new_rows, value_input_option="USER_ENTERED")
+        needed_rows = next_row + len(new_rows) - 1
+        if needed_rows > ws.row_count:
+            ws.add_rows(needed_rows - ws.row_count)
+        ws.update(f"A{next_row}", new_rows, value_input_option="USER_ENTERED")
 
     return len(new_rows)
 
