@@ -121,12 +121,9 @@ def _parse_result(item):
 
 def _get_gsheet_creds():
     """Load Google credentials from Streamlit secrets (cloud) or file (local)."""
-    # Try Streamlit secrets first (for cloud deployment)
-    if "GCP_SERVICE_ACCOUNT" in st.secrets:
-        raw = st.secrets["GCP_SERVICE_ACCOUNT"]
-        service_account_info = json.loads(raw)
-        return Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-    # Fall back to local file
+    if "gcp_service_account" in st.secrets:
+        info = dict(st.secrets["gcp_service_account"])
+        return Credentials.from_service_account_info(info, scopes=SCOPES)
     return Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
 
 
