@@ -1,4 +1,3 @@
-import base64
 import json
 import os
 import re
@@ -121,11 +120,7 @@ def _parse_result(item):
 
 
 def _get_gsheet_creds():
-    """Load Google credentials from Streamlit secrets (cloud) or file (local)."""
-    if "GCP_CREDENTIALS_B64" in st.secrets:
-        decoded = base64.b64decode(st.secrets["GCP_CREDENTIALS_B64"]).decode()
-        info = json.loads(decoded)
-        return Credentials.from_service_account_info(info, scopes=SCOPES)
+    """Load Google credentials."""
     return Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
 
 
