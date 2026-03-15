@@ -137,13 +137,20 @@ def export_to_sheet(rows, query):
     ws = sh.sheet1
 
     # Ensure header row exists
-    existing = ws.get_all_values()
-    if not existing:
+    all_values = ws.get_all_values()
+    if not all_values:
         ws.update("A1", [["Name", "Title", "Company", "LinkedIn URL", "Search Query", "Date"]])
         existing_urls = set()
+        last_data_row = 1
     else:
         url_col = 3  # 0-indexed column D
-        existing_urls = {r[url_col] for r in existing[1:] if len(r) > url_col}
+        existing_urls = set()
+        last_data_row = 0
+        for i, row in enumerate(all_values):
+            if any(cell.strip() for cell in row):
+                last_data_row = i + 1  # 1-indexed
+                if len(row) > url_col and row[url_col].strip():
+                    existing_urls.add(row[url_col])
 
     new_rows = []
     today = date.today().isoformat()
@@ -155,7 +162,7 @@ def export_to_sheet(rows, query):
             ])
 
     if new_rows:
-        next_row = len(existing) + 1
+        next_row = last_data_row + 1
         needed_rows = next_row + len(new_rows) - 1
         if needed_rows > ws.row_count:
             ws.add_rows(needed_rows - ws.row_count)
