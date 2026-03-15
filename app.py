@@ -136,22 +136,25 @@ def export_to_sheet(rows, query):
     sh = gc.open_by_key(SHEET_ID)
     ws = sh.sheet1
 
-    # Ensure header row exists
+    # Get all data and compact it (remove blank rows)
     all_values = ws.get_all_values()
-    if not all_values:
-        ws.update("A1", [["Name", "Title", "Company", "LinkedIn URL", "Search Query", "Date"]])
-        existing_urls = set()
-        last_data_row = 1
-    else:
-        url_col = 3  # 0-indexed column D
-        existing_urls = set()
-        last_data_row = 0
-        for i, row in enumerate(all_values):
-            if any(cell.strip() for cell in row):
-                last_data_row = i + 1  # 1-indexed
-                if len(row) > url_col and row[url_col].strip():
-                    existing_urls.add(row[url_col])
+    header = ["Name", "Title", "Company", "LinkedIn URL", "Search Query", "Date"]
 
+    # Filter out blank rows, keep header + data rows only
+    data_rows = []
+    existing_urls = set()
+    url_col = 3
+    for row in all_values:
+        if any(cell.strip() for cell in row):
+            data_rows.append(row)
+            if len(row) > url_col and row[url_col].strip():
+                existing_urls.add(row[url_col])
+
+    # If no data at all, start with header
+    if not data_rows:
+        data_rows = [header]
+
+    # Build new rows to add
     new_rows = []
     today = date.today().isoformat()
     for r in rows:
@@ -162,11 +165,16 @@ def export_to_sheet(rows, query):
             ])
 
     if new_rows:
-        next_row = last_data_row + 1
-        needed_rows = next_row + len(new_rows) - 1
+        # Rewrite the entire sheet: compact data + new rows, no blanks
+        all_data = data_rows + new_rows
+        needed_rows = len(all_data)
         if needed_rows > ws.row_count:
             ws.add_rows(needed_rows - ws.row_count)
-        ws.update(f"A{next_row}", new_rows, value_input_option="USER_ENTERED")
+        ws.clear()
+        ws.update("A1", all_data, value_input_option="USER_ENTERED")
+        # Trim extra blank rows if sheet has too many
+        if ws.row_count > needed_rows + 10:
+            ws.resize(rows=needed_rows + 10)
 
     return len(new_rows)
 
