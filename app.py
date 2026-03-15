@@ -120,8 +120,13 @@ def _parse_result(item):
 
 
 def _get_gsheet_creds():
-    """Load Google credentials."""
-    return Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
+    """Load Google credentials, handling potential line ending issues."""
+    with open("credentials.json") as f:
+        info = json.load(f)
+    # Fix private key line endings that may get corrupted by git
+    if "private_key" in info:
+        info["private_key"] = info["private_key"].replace("\\n", "\n")
+    return Credentials.from_service_account_info(info, scopes=SCOPES)
 
 
 def export_to_sheet(rows, query):
